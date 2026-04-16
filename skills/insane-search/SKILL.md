@@ -21,98 +21,49 @@ description: >
 
 > URL 접근이 차단될 때, 플랫폼별 최적 방법을 자동으로 안내한다.
 
-## 사이트별 접근 인덱스
+## Phase 0 — 특수 엔드포인트 인덱스
 
-아래 테이블에서 접근하려는 사이트를 찾고, 해당 방법의 reference를 참조한다.
+> 범용 체인(Phase 1~3)으로는 **발견 불가능한** 전용 API/CLI 도구만 인덱스에 둔다.
+> 여기에 없는 사이트는 전부 Phase 1부터 자동 시도한다.
 
-### 소셜 미디어
+### 소셜/커뮤니티 전용 API
 
-| 사이트 | 도메인 | 방법 | 상세 |
-|--------|--------|------|------|
-| X/Twitter | x.com, twitter.com | Syndication API, oEmbed | [twitter.md](references/twitter.md) |
-| Reddit | reddit.com | JSON API (.json + Mobile UA) | [json-api.md](references/json-api.md) |
-| Threads | threads.com | Jina Reader | [jina.md](references/jina.md) |
-| Bluesky | bsky.app | AT Protocol 공개 API | [public-api.md](references/public-api.md) |
-| Mastodon | mastodon.social 등 | 공개 API (인스턴스별) | [public-api.md](references/public-api.md) |
+| 플랫폼 | 방법 | 상세 |
+|--------|------|------|
+| X/Twitter | `syndication.twitter.com/srv/timeline-profile/...` + oEmbed | [twitter.md](references/twitter.md) |
+| Reddit | URL + `.json` + Mobile UA | [json-api.md](references/json-api.md) |
+| Bluesky | AT Protocol (`public.api.bsky.app/xrpc/...`) | [public-api.md](references/public-api.md) |
+| Mastodon | 인스턴스별 공개 API | [public-api.md](references/public-api.md) |
+| Hacker News | Firebase API (`hacker-news.firebaseio.com/v0/...`) | [json-api.md](references/json-api.md) |
+| Stack Overflow | SE API v2.3 (`api.stackexchange.com/2.3/...`) | [public-api.md](references/public-api.md) |
+| Lobste.rs / V2EX / dev.to | 공개 JSON API | [json-api.md](references/json-api.md) |
 
-### 미디어/영상
+### 미디어 (CLI 도구 필수)
 
-| 사이트 | 도메인 | 방법 | 상세 |
-|--------|--------|------|------|
-| YouTube | youtube.com, youtu.be | yt-dlp (자막/메타/검색/댓글) | [media.md](references/media.md) |
-| Vimeo | vimeo.com | yt-dlp | [media.md](references/media.md) |
-| Twitch | twitch.tv | yt-dlp (VOD/클립) | [media.md](references/media.md) |
-| TikTok | tiktok.com | yt-dlp | [media.md](references/media.md) |
-| SoundCloud | soundcloud.com | yt-dlp (검색 가능: scsearch) | [media.md](references/media.md) |
-| 1,858개 미디어 사이트 | 다양 | yt-dlp --dump-json | [media.md](references/media.md) |
+| 플랫폼 | 방법 | 상세 |
+|--------|------|------|
+| YouTube/Vimeo/Twitch/TikTok/SoundCloud 등 1,858개 | `yt-dlp --dump-json` | [media.md](references/media.md) |
 
-### 개발/기술
+### 학술/레지스트리
 
-| 사이트 | 도메인 | 방법 | 상세 |
-|--------|--------|------|------|
-| GitHub | github.com | gh CLI / REST API | [public-api.md](references/public-api.md) |
-| V2EX | v2ex.com | JSON API | [json-api.md](references/json-api.md) |
-| Stack Overflow | stackoverflow.com | SE API v2.3 (WebFetch 도메인 차단) | [public-api.md](references/public-api.md) |
-| Hacker News | news.ycombinator.com | Firebase JSON API | [json-api.md](references/json-api.md) |
-| Lobste.rs | lobste.rs | JSON API | [json-api.md](references/json-api.md) |
-| dev.to | dev.to | 공개 API | [json-api.md](references/json-api.md) |
-| npm | npmjs.com | Registry API | [json-api.md](references/json-api.md) |
-| PyPI | pypi.org | JSON API | [json-api.md](references/json-api.md) |
+| 플랫폼 | 방법 | 상세 |
+|--------|------|------|
+| arXiv | Atom API (`export.arxiv.org/api/query`) | [public-api.md](references/public-api.md) |
+| CrossRef | REST API | [public-api.md](references/public-api.md) |
+| Wikipedia | REST API | [json-api.md](references/json-api.md) |
+| OpenLibrary | JSON API | [public-api.md](references/public-api.md) |
+| GitHub | gh CLI / REST API | [public-api.md](references/public-api.md) |
+| npm / PyPI | Registry API | [json-api.md](references/json-api.md) |
+| Wayback Machine | CDX API | [public-api.md](references/public-api.md) |
 
-### 학술/지식
+### 한국 전용
 
-| 사이트 | 도메인 | 방법 | 상세 |
-|--------|--------|------|------|
-| arXiv | arxiv.org | Atom API | [public-api.md](references/public-api.md) |
-| CrossRef | doi.org | REST API | [public-api.md](references/public-api.md) |
-| Wikipedia | wikipedia.org | REST API | [json-api.md](references/json-api.md) |
-| OpenLibrary | openlibrary.org | JSON API | [public-api.md](references/public-api.md) |
-| Wayback Machine | web.archive.org | CDX API | [public-api.md](references/public-api.md) |
+| 플랫폼 | 방법 | 상세 |
+|--------|------|------|
+| 네이버 금융 시세 | `api.finance.naver.com/siseJson.naver` (비공식 JSON) | [naver.md](references/naver.md) |
 
-### 한국 플랫폼
-
-| 사이트 | 도메인 | 방법 | 상세 |
-|--------|--------|------|------|
-| 네이버 블로그 | blog.naver.com | 모바일 URL + iPhone UA | [naver.md](references/naver.md) |
-| 네이버 뉴스 | news.naver.com | Jina Reader | [naver.md](references/naver.md) |
-| 네이버 증권 | finance.naver.com | Jina Reader | [naver.md](references/naver.md) |
-| 네이버 TV | tv.naver.com | yt-dlp | [naver.md](references/naver.md) |
-| 네이버 금융 시세 | api.finance.naver.com | 비공식 JSON API (무인증) | [naver.md](references/naver.md) |
-| 쿠팡 | coupang.com | curl_cffi safari + JSON-LD | [tls-impersonate.md](references/tls-impersonate.md) |
-| 요즘IT | yozm.wishket.com | curl Chrome UA (Jina 차단됨) | [fallback.md](references/fallback.md) |
-| 당근마켓 | daangn.com | Jina Reader (불안정) | [jina.md](references/jina.md) |
-| 클리앙 | clien.net | Jina Reader | [jina.md](references/jina.md) |
-| 루리웹 | ruliweb.com | Jina Reader | [jina.md](references/jina.md) |
-| 뽐뿌 | ppomppu.co.kr | Jina Reader + RSS | [jina.md](references/jina.md) |
-| 긱뉴스 | news.hada.io | Jina Reader | [jina.md](references/jina.md) |
-| 벨로그 | velog.io | RSS (`v2.velog.io/rss/@{user}`) | [json-api.md](references/json-api.md) |
-| 브런치 | brunch.co.kr | Jina Reader + RSS | [jina.md](references/jina.md) |
-| 한국경제 | hankyung.com | Jina Reader + RSS | [jina.md](references/jina.md) |
-| 44bits | 44bits.io | Jina Reader | [jina.md](references/jina.md) |
-| 커리어리 | careerly.co.kr | Jina Reader | [jina.md](references/jina.md) |
-| 디시인사이드 | dcinside.com | curl 모바일 UA (Jina 빈 본문) | [fallback.md](references/fallback.md) |
-| 에펨코리아 | fmkorea.com | curl_cffi (Jina 430 차단) | [tls-impersonate.md](references/tls-impersonate.md) |
-| 티스토리 | *.tistory.com | WebFetch / RSS | [json-api.md](references/json-api.md) |
-| SBS/JTBC/Kakao | sbs.co.kr, jtbc.co.kr | yt-dlp | [media.md](references/media.md) |
-| Chzzk/Soop | chzzk.naver.com, sooplive.co.kr | yt-dlp | [media.md](references/media.md) |
-
-### 뉴스/미디어
-
-| 사이트 | 도메인 | 방법 | 상세 |
-|--------|--------|------|------|
-| Medium | medium.com | Jina Reader | [jina.md](references/jina.md) |
-| Substack | *.substack.com | Jina Reader + RSS | [jina.md](references/jina.md) |
-| 다음 뉴스 | news.daum.net | Jina Reader | [jina.md](references/jina.md) |
-| Google News | news.google.com | RSS 피드 (무인증) | [rss.md](references/rss.md) |
-| 조선/중앙/동아/경향/SBS/MBC | 각 언론사 | RSS 직접 구독 (무인증) | [rss.md](references/rss.md) |
-| LinkedIn | linkedin.com | JSON-LD Person/Org + Jobs Guest API | [metadata.md](references/metadata.md) |
-
-### RSS 피드
-
-| 사이트 | 도메인 | 방법 | 상세 |
-|--------|--------|------|------|
-| RSS/Atom 범용 | 다양 | feedparser (자동설치) | [rss.md](references/rss.md) |
-| SearXNG | searx.space | 무인증 메타검색 JSON | [rss.md](references/rss.md) |
+**그 외 모든 사이트는 Phase 1~3이 자동 처리한다.**
+쿠팡/요즘IT/LinkedIn/네이버 블로그/클리앙/Medium/Substack 등 — 별도 인덱스 불필요.
 
 ## 접근 순서 — 적응형 스케줄러
 
