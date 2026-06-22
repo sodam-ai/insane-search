@@ -1,234 +1,112 @@
 English | [한국어](README.ko.md)
 
+<div align="center">
+
 # insane-search
 
-> **The scraper that's too stubborn to quit.**
+**When Claude Code can't read a blocked page, this gets in anyway.**
 
-`403`. WAF. CAPTCHA. Empty SPA. Login wall. When every normal tool taps out, insane-search is just getting started. Five probe phases. Auto-installs TLS impersonation. Discovers hidden APIs through a real browser. Tries everything — and for every site that claimed to be "blocked," something always works.
+A resilient public-page reader for Claude Code. No API keys, no proxy setup.
 
-No API keys. No signup. No config. Install, and watch Claude Code stop giving up.
+<p>
+  <a href="https://docs.anthropic.com/en/docs/claude-code"><img src="https://img.shields.io/badge/platform-Claude_Code-D97757?logo=claude" alt="Claude Code"></a>
+  <img src="https://img.shields.io/badge/API_key-not_required-3FB950" alt="No API key">
+  <a href="https://github.com/fivetaku/gptaku_plugins"><img src="https://img.shields.io/badge/part_of-gptaku--plugins-6E56CF" alt="part of gptaku-plugins"></a>
+  <a href="https://github.com/fivetaku/insane-search/stargazers"><img src="https://img.shields.io/github/stars/fivetaku/insane-search?style=flat&color=F0B72F" alt="stars"></a>
+</p>
 
-[Quick Start](#quick-start) • [How it works](#how-it-works) • [What's in the index](#whats-in-the-index) • [References](#references) • [Requirements](#requirements)
+<!-- Hero — cinematic key-art: a blocked site (403 / CAPTCHA / WAF) shatters as
+     insane-search breaks through and returns real public content with its source. -->
+<img src="assets/hero.png" width="860" alt="Cinematic split: on the left a blocked site shows 403 Forbidden, a CAPTCHA, and a WAF wall; it shatters down the middle as insane-search breaks through on the right, returning a real public post from @claudeai (Claude Code Plugins) with its source — no API key.">
+
+</div>
 
 ---
 
-## Quick Start
+## ⚡ Install
 
-### 1. Add the marketplace
-
-```
+```bash
 /plugin marketplace add https://github.com/fivetaku/gptaku_plugins.git
+/plugin install insane-search@gptaku-plugins
+/reload-plugins
 ```
 
-### 2. Install the plugin
+No commands to learn. Ask Claude Code normally — insane-search kicks in when a fetch gets blocked.
 
-```
-/plugin install insane-search
-```
+## 💬 Try it
 
-### 3. Restart Claude Code
+Just ask normally — insane-search kicks in when a fetch gets blocked:
 
-That's it. No config, no API keys, no env vars.
+> *"Find what people are saying about Claude Code on Reddit and summarize the top threads."*
+> *"Search X for posts about insane-search."*
+> *"Summarize this YouTube video."*
 
-### 4. Start asking
+**Expected:** Claude reaches each site's public route — Reddit's feed, X via oEmbed, YouTube captions — with no login and no API key, and returns usable text, where the same request returns *"I can't access that"* without the plugin.
 
-Just talk normally. Blocked sites will be unblocked automatically.
+## 🌐 Works on
 
-```
-"Show me what's trending on r/LocalLLaMA"
-"What did @openclaw post on X recently?"
-"Search X for posts about insane-search"
-"Summarize this YouTube video"
-"Search Coupang for under ₩100,000 keyboards"
-"Read this Naver blog post for me"
-"네이버에서 클로드코드 관련 뉴스 찾아줘"
-"Find LinkedIn articles about Claude Code plugins"
-```
+**X · Reddit · YouTube · Hacker News · Naver · Coupang · LinkedIn · Medium · Substack · arXiv · GitHub · Stack Overflow · Bluesky · Mastodon** — plus any site with a public page, feed, or `/rss`. Full platform list & methods → [PLATFORMS.md](PLATFORMS.md).
 
----
+## ⚙️ Why it gets through
 
-## Why insane-search?
+- **It escalates, never pre-judges** — public API readers → syndication gateways → TLS impersonation → a real headless browser, trying each route until one works.
+- **It looks human** — builds a full browser identity (real TLS fingerprint, cookie warming, referer chain), not just a swapped User-Agent.
+- **It finds hidden APIs** — watches the real browser's network traffic and reuses the site's own internal JSON.
+- **Zero setup** — auto-installs what it needs (`curl_cffi`, `yt-dlp`, …) on first use. No API keys, no signup.
 
-- **It doesn't know the word "blocked"** — No pre-judged "this site can't be accessed" labels. Every site gets the full chain. Coupang? Coupang falls. LinkedIn? Full article body extracted. Yozm? Chrome UA and done
-- **Identity spoofing built in** — Phase 2 doesn't just swap TLS fingerprints. It builds a full browser identity: homepage cookie warming, referrer chains, locale-matched headers. Sites like fmkorea (HTTP 430) and LinkedIn (login wall) fall to this alone
-- **Intent routing** — "Fetch this URL" and "Search X for this keyword" are different problems. insane-search routes keywords through WebSearch or Naver Search first, gets URLs, then fetches content. Two-stage pipeline, automatic
-- **Installs its own weapons** — Missing `curl_cffi` for TLS fingerprint bypass? Installs it. Missing `feedparser`? Installs it. Missing `yt-dlp`? Installs it. You don't even notice
-- **5 probe phases, not 1** — WebFetch → Jina → curl UA/URL variants → TLS impersonation with identity spoofing → real browser. Each phase escalates only when the previous hits a wall
-- **Finds hidden APIs** — Phase 3 doesn't just render the page. It watches the browser's network traffic, catches the actual JSON API the site uses internally, and hands it back for reuse
-- **Zero setup friction** — No API keys, no OAuth, no developer portals. Everything runs on public endpoints and auto-installable libraries
+## 🆚 Default Claude Code vs `+ insane-search`
 
----
+| When you hit… | Claude Code alone | `+ insane-search` |
+| :--- | :--- | :--- |
+| A `403` / WAF-blocked page | ✖ gives up | ✓ escalates until one route gets through |
+| Platform content (X, Reddit, HN) | ✖ often blocked or empty | ✓ public API readers + syndication |
+| An anti-bot / CAPTCHA challenge | ✖ stops | ✓ TLS impersonation, then a real headless browser |
+| A media page (YouTube, 1,800+ sites) | ✖ no transcript | ✓ `yt-dlp` metadata + captions |
+| Missing tools (`curl_cffi`, `yt-dlp`) | — | ✓ auto-installs on first use |
+| API keys / signup | — | ✓ none |
+| A **login wall or paywall** | ✖ | ✖ **stops here, and says so** (see Boundaries) |
 
-## How it works
+The differentiating row is the one thing the default fetcher can't do: **it keeps trying public routes until one works.**
 
-When Claude Code needs to fetch a URL, insane-search runs a 4-phase adaptive scheduler. Each phase only runs if the previous phase failed or detected specific blocking signals.
+## ✨ What just happened
 
-```
-Phase 0: Special endpoint index
-  ↓ not in index or failed
-Phase 1: Lightweight probes (parallel)
-  • WebFetch + Jina Reader
-  • curl with Chrome / mobile / Googlebot UAs
-  • URL variants: m.{domain}, .json, /rss, /feed
-  • Sidecar: AMP cache, archive.today, Wayback (low-trust)
-  ↓ 403/429/WAF headers/challenge body detected
-Phase 2: TLS impersonation + identity spoofing
-  • curl_cffi with safari → chrome → firefox
-  • Identity spoofing: homepage cookie warming → referrer chain → locale headers
-  • Behavioral challenge detection (Akamai _abck) → skip to Phase 3
-  • Auto-installs if missing: pip install curl_cffi
-  ↓ TLS bypass failed or JS challenge detected
-Phase 3: Full browser
-  • Playwright MCP (browser_navigate → snapshot → evaluate)
-  • Also discovers hidden APIs via network_requests
-  ↓ login/paywall detected
-Exit: "authentication required" — no amount of phases will fix this
-```
+| Without it | With insane-search |
+| :--- | :--- |
+| Ordinary fetch hits `403` and Claude says it can't read the page | The plugin picks a public-access route and returns usable text |
+| You manually try mirrors, archives, mobile URLs | Fallbacks escalate automatically, public-only |
+| A blocked page is a dead end | Metadata and structured data still yield titles, prices, summaries |
 
-**Core principle**: don't pre-exclude any method. Don't skip a method because a dependency is missing — install it and try. Don't skip because a site is "known to be hard" — the site changes, and the method might work now.
+## 🔁 How it works
 
-Every HTML response is also scanned for OGP tags and JSON-LD structured data — so even partial responses yield titles, summaries, prices, or profile info.
+<img src="assets/pipeline.png" width="860" alt="Phase 0→3 escalation pipeline: a blocked URL flows through special public endpoints → lightweight probes → TLS impersonation → a real headless browser until one returns clean public content; a login or paywall exits as 'authentication required'. Every response is scanned for OGP / JSON-LD.">
 
----
+<details>
+<summary><strong>Phase 0→3 adaptive scheduler — details</strong></summary>
 
-## What's in the index
+Each phase runs only if the previous one fails or detects a blocking signal:
 
-Only special endpoints that the generic chain can't discover on its own. Everything else — Naver blogs, Coupang, LinkedIn, Medium, Korean news sites, Substack, most forums — is handled by the adaptive scheduler without explicit entries.
+- **Phase 0** — special public endpoints (platform APIs, feeds) it can't discover generically
+- **Phase 1** — lightweight probes: public API readers, syndication gateways, mobile / `.json` / `/rss` URL variants
+- **Phase 2** — TLS impersonation (curl_cffi: safari → chrome → firefox) with a full browser identity
+- **Phase 3** — a real headless browser, which also surfaces the public JSON APIs a site uses internally
+- **Exit** — a login or paywall is detected: it reports *"authentication required"* rather than pretending
 
-### Platform-specific APIs
+Every response is also scanned for OGP / JSON-LD, so even partial pages yield titles, summaries, and prices.
+</details>
 
-| Platform | Method | Reference |
-|----------|--------|-----------|
-| X/Twitter | syndication (timeline) + oEmbed (single tweet) + **WebSearch keyword search** | `twitter.md` |
-| Reddit | URL + `.json` + Mobile UA | `json-api.md` |
-| Bluesky | AT Protocol (`public.api.bsky.app/xrpc/...`) | `public-api.md` |
-| Mastodon | Per-instance public API | `public-api.md` |
-| Hacker News | Firebase API + **Algolia Search** (`hn.algolia.com/api/v1/search`) | `json-api.md` |
-| Stack Overflow | SE API v2.3 | `public-api.md` |
-| Lobste.rs / V2EX / dev.to | Public JSON APIs | `json-api.md` |
+## 🔒 Boundaries
 
-### Media (CLI tool required)
+insane-search is a **reader for public content**, not a way around authentication.
 
-| Platform | Method | Reference |
-|----------|--------|-----------|
-| YouTube / Vimeo / Twitch / TikTok / SoundCloud + 1,853 others | `yt-dlp --dump-json` | `media.md` |
-
-### Academic & registry
-
-| Platform | Method | Reference |
-|----------|--------|-----------|
-| arXiv | Atom API | `public-api.md` |
-| CrossRef | REST API | `public-api.md` |
-| Wikipedia | REST API | `json-api.md` |
-| OpenLibrary | JSON API | `public-api.md` |
-| GitHub | `gh` CLI / REST API | `public-api.md` |
-| npm / PyPI | Registry API | `json-api.md` |
-| Wayback Machine | CDX API | `public-api.md` |
-
-### Korea-specific
-
-| Platform | Method | Reference |
-|----------|--------|-----------|
-| Naver Search | curl_cffi identity spoofing + `search.naver.com` (통합/블로그/뉴스) | `naver.md` |
-| Naver Finance (stock prices) | `api.finance.naver.com/siseJson.naver` (unofficial, no auth) | `naver.md` |
-
-**Everything else flows through Phase 1~3 automatically** — including Coupang (curl_cffi safari), LinkedIn (identity spoofing → JSON-LD full article body), fmkorea (identity spoofing), Medium (Jina), most Korean forums (Jina or curl), and any site with `/rss` or `/feed` endpoints.
-
----
-
-## References
-
-The skill is organized as a set of reference files, each covering one class of techniques.
-
-| File | Covers |
-|------|--------|
-| `fallback.md` | Phase 0→3 adaptive scheduler, escalation signals, response validation |
-| `jina.md` | Jina Reader (no-key reader at `r.jina.ai`) |
-| `json-api.md` | Public JSON APIs (Reddit, HN, dev.to, Wikipedia, npm, PyPI, etc.) |
-| `public-api.md` | Bluesky, Mastodon, Stack Exchange, arXiv, CrossRef, OpenLibrary, GitHub, Wayback |
-| `media.md` | yt-dlp usage for 1,858 media sites |
-| `twitter.md` | Twitter Syndication API + oEmbed + WebSearch keyword search |
-| `naver.md` | Naver Search (curl_cffi identity spoofing), blog mobile URLs, Finance JSON API |
-| `rss.md` | Korean news RSS (9 outlets), Google News RSS, feedparser, SearXNG |
-| `tls-impersonate.md` | curl_cffi multi-target + identity spoofing (cookie warming, referrer chain) + behavioral challenge detection |
-| `playwright.md` | Playwright MCP full toolkit (snapshot, evaluate, network_requests) |
-| `cache-archive.md` | Google AMP cache, archive.today, Wayback Machine |
-| `metadata.md` | OGP, JSON-LD, Schema.org, Next.js RSC payload extraction |
-
----
-
-## Dependencies
-
-**Required:** Claude Code only.
-
-**Auto-installed when needed** (the skill installs these transparently on first use):
-
-```bash
-pip install curl_cffi    # TLS impersonation for WAF-blocked sites
-pip install feedparser   # RSS/Atom parsing
-pip install yt-dlp       # 1,858 media sites
-```
-
-**Optional, improves coverage:**
-
-```bash
-brew install gh                      # GitHub (faster than REST API)
-claude mcp add playwright -- npx @playwright/mcp@latest   # JS-rendered sites
-```
-
-If a dependency is missing, the skill doesn't skip the method — it installs the dependency and tries.
-
----
-
-## What insane-search is not
-
-- **Not a scraper** — It's a method-selection layer. It uses public APIs and standard techniques
-- **Not API-key based** — Everything uses no-auth public endpoints or URL transformations
-- **Not a hand-maintained answer key** — The index is minimal (~15 groups). Everything else is discovered by the adaptive scheduler
-- **Not bias-forming** — There's no "access denied" list. If a site can be reached, the chain will find the way
-
----
-
-## Usage
-
-There are no commands. Just talk normally. The skill triggers automatically when a URL is blocked or when accessing platforms that need special handling.
-
-```
-"What's on the front page of Hacker News right now?"
-→ Firebase API → top stories with scores and comments
-
-"Find AI papers published this week on arXiv"
-→ arXiv Atom API with date filter
-
-"Scrape Coupang for laptop deals under $1000"
-→ Phase 2: curl_cffi safari → JSON-LD ItemList
-
-"Summarize this Medium article"
-→ Phase 1: Jina Reader → clean markdown
-
-"Check what people are saying about Claude Code on Reddit"
-→ Reddit JSON API with Mobile UA → posts + top comments
-
-"Search X for insane-search"
-→ Intent routing: keyword search → WebSearch(site:x.com) → oEmbed → full tweets
-
-"네이버에서 클로드코드 뉴스 찾아줘"
-→ Naver Search (identity spoofing) → news tab → article URLs → Jina Reader
-
-"Find LinkedIn articles about AI agents"
-→ WebSearch(site:linkedin.com) → identity spoofing → JSON-LD articleBody
-```
-
----
-
-## License
-
-MIT
+- Reaches what's available through public pages, public APIs, feeds, archives, and a browser's public responses.
+- **Stops at logins and paywalls** — it reports `authentication required` instead of trying to defeat them.
+- Never logs in as you and never stores or transmits credentials.
+- All routes use no-auth public endpoints and standard, documented techniques.
 
 ---
 
 <div align="center">
 
-**If it's on the web, insane-search is getting in.**
+**Part of [gptaku-plugins](https://github.com/fivetaku/gptaku_plugins)** — Claude Code plugins that break through the walls everything else stops at.
 
 </div>

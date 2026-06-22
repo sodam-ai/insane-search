@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.1 — 2026-06-22
+
+README overhaul — image-first landing that shows what the plugin does in one glance.
+
+- **New README (en + ko)**: replaces the 234-line manual with a ~110-line sales landing. Two cinematic hero images (a 403/CAPTCHA/WAF wall shattering as `insane-search GETS IN`, and the Phase 0→3 escalation pipeline as an energy rail) under `assets/`. Sections: Install · Try it · Works on · Why it gets through · Default vs `+ insane-search` · How it works · Boundaries.
+- **Content preserved, not dropped**: the full platform tables, reference-file map, dependencies, and example prompts moved to `PLATFORMS.md` (linked from the README) — nothing lost, the landing just stops carrying the manual.
+- Hero demo uses real, verified data (a public `@claudeai` post via WebSearch → oEmbed, no API key); the "before" reflects the actual default-fetch failure on X (HTTP 402 / a JavaScript-only shell), not a fictional login wall.
+
 ## 0.7.0 — 2026-06-22
 
 Harness enforcement — the engine now *makes* itself try every route instead of relying on the agent to remember to. (Motivated by a live failure: `.json`/syndication 403/429'd, the agent declared Reddit/X "blocked", and nobody tried `.rss`/oEmbed.)
