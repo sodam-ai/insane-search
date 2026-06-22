@@ -134,6 +134,35 @@ def t_validator_byte_size_not_char_count():
     print(f"  ✓ byte size counts UTF-8 bytes ({v.body_size}B from 1500 chars) → {v.verdict.value}")
 
 
+def t_validator_small_complete_page_is_weak_ok():
+    # example.com is a complete ~600B HTML document with real text — a small but
+    # genuine page must NOT be mislabelled a challenge stub (regression guard).
+    body = ('<!doctype html><html lang="en"><head><title>Example Domain</title>'
+            '</head><body><div><h1>Example Domain</h1><p>This domain is for use in '
+            'documentation examples without needing permission.</p>'
+            '<p><a href="https://iana.org/domains/example">Learn more</a></p>'
+            '</div></body></html>')
+    v = validate(_Resp(200, body, headers={"Content-Type": "text/html"}))
+    assert v.body_size < 3000, v.body_size
+    assert v.verdict == Verdict.WEAK_OK, (v.verdict, v.reasons)
+    print(f"  ✓ small complete page → {v.verdict.value} ({v.reasons})")
+
+
+def t_validator_small_script_stub_still_challenge():
+    # Script-only tiny body (no visible text) is still a suspicious stub.
+    body = '<html><head></head><body><script src="/cdn-cgi/challenge.js"></script></body></html>'
+    v = validate(_Resp(200, body, headers={"Content-Type": "text/html"}))
+    assert v.verdict == Verdict.CHALLENGE, (v.verdict, v.reasons)
+    print(f"  ✓ script-only tiny body → {v.verdict.value}")
+
+
+def t_validator_small_fragment_still_challenge():
+    # Incomplete fragment (no closing </html>/</body>) stays suspicious.
+    v = validate(_Resp(200, "<div>loading", headers={"Content-Type": "text/html"}))
+    assert v.verdict == Verdict.CHALLENGE, (v.verdict, v.reasons)
+    print(f"  ✓ incomplete fragment → {v.verdict.value}")
+
+
 ALL = [
     ("scheduler_diversity_under_cap", t_scheduler_diversity_under_cap),
     ("scheduler_avoid_deprioritized_not_deleted", t_scheduler_avoid_deprioritized_not_deleted),
@@ -144,6 +173,9 @@ ALL = [
     ("validator_hard_marker_still_challenge", t_validator_hard_marker_still_challenge),
     ("validator_status_semantics", t_validator_status_semantics),
     ("validator_byte_size_not_char_count", t_validator_byte_size_not_char_count),
+    ("validator_small_complete_page_is_weak_ok", t_validator_small_complete_page_is_weak_ok),
+    ("validator_small_script_stub_still_challenge", t_validator_small_script_stub_still_challenge),
+    ("validator_small_fragment_still_challenge", t_validator_small_fragment_still_challenge),
 ]
 
 

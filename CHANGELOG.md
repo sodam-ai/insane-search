@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.1 — 2026-06-22
+
+Validator false-positive fix — a small but complete page is no longer mislabelled a challenge.
+
+- **`validators.py`**: the tiny-body heuristic (body < 3000B with no positive proof) used to return a decisive `CHALLENGE` on size alone, so a legitimately short page (e.g. example.com at ~600B) failed with `ok=False` even though it returned a clean 200 with real content. It now checks completeness first — a COMPLETE HTML document (`</html>`/`</body>`) carrying meaningful visible text → `WEAK_OK`; only an incomplete / script-only / empty small body stays `CHALLENGE`. New `_looks_complete_content_page` helper.
+- Pre-existing since validator v2 (v0.6.0) — affected *every* complete page under 3000 bytes, not just example.com.
+- Adds 3 regression cases to `tests/test_u1.py` (small-complete → weak_ok; script-stub and incomplete-fragment → challenge). Full engine regression 48/48; `bias_check` clean.
+
 ## 0.8.0 — 2026-06-22
 
 Per-host self-learning (U5) — the engine now remembers which route got through and tries it first next time. Lab-built (`insane-search-lab`), effect-tested before shipping.

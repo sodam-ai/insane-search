@@ -24,6 +24,7 @@ v2 changes vs v1 (per multi-AI review 2026-06-21):
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
@@ -155,6 +156,21 @@ def _byte_size(resp, text: str) -> int:
     return len(text.encode("utf-8", "ignore"))
 
 
+def _looks_complete_content_page(text: str, lowered: str) -> bool:
+    """True when a SMALL body is still a real (short) page, not a challenge stub.
+
+    A genuine page is a COMPLETE HTML document (closes `</html>`/`</body>`) that
+    carries meaningful visible text — e.g. example.com at ~600B. A WAF interstitial
+    that slipped past the marker checks is typically script-only, empty, or an
+    incomplete fragment, so it has little visible text and returns False."""
+    if "</html>" not in lowered and "</body>" not in lowered:
+        return False
+    visible = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", text)
+    visible = re.sub(r"(?s)<[^>]+>", " ", visible)
+    visible = re.sub(r"\s+", " ", visible).strip()
+    return len(visible) >= 64
+
+
 def _selector_hits(body: str, selectors: list[str]) -> Optional[list[str]]:
     """Return matched-selector list, or None if BS4 is unavailable."""
     if BeautifulSoup is None:
@@ -281,6 +297,14 @@ def validate(
         return r
 
     if size < SMALL_BODY_THRESHOLD:
+        # A small body is only weak evidence of a challenge stub. A COMPLETE,
+        # content-bearing HTML document that just happens to be short (e.g.
+        # example.com ~600B) is a real page → clean weak success. Only an
+        # incomplete / script-only / empty small body stays suspicious.
+        if _looks_complete_content_page(text, lowered):
+            r.verdict = Verdict.WEAK_OK
+            r.reasons.append(f"small_but_complete:{size}")
+            return r
         r.verdict = Verdict.CHALLENGE
         r.reasons.append(f"tiny_body:{size}")
         return r
