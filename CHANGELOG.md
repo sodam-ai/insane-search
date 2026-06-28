@@ -5,6 +5,7 @@
 Prompt-injection surface hardening for fetched public web content.
 
 - **Content-safety metadata and envelope**: fetched text is now annotated as `untrusted_public_web`, reports deterministic prompt-injection risk signals, and the default CLI text output wraps content between collision-resistant `[BEGIN UNTRUSTED WEB CONTENT]` / `[END UNTRUSTED WEB CONTENT]` boundary lines. Python API callers still receive raw `FetchResult.content`, and can use `FetchResult.to_untrusted_text()` for the same safe agent-facing representation as the CLI; JSON output keeps content omitted and adds metadata only. This is a mitigation/packaging boundary, not blocking or complete prompt-injection prevention.
+- **Risk-score calibration**: a lone topical keyword (e.g. `secret`/`token`/`password`) on an ordinary page no longer escalates to `medium`, and keyword-only signals without an explicit instruction-override now cap at `medium` instead of `high`. `high` is reserved for an instruction-override combined with a sensitive action. This avoids crying wolf on the technical/API docs this tool routinely fetches — verified against real pages (Wikipedia, MDN, Django/Stripe docs) — so the `high` label stays meaningful for genuine injection attempts.
 
 ## 0.8.1 — 2026-06-22
 

@@ -88,15 +88,23 @@ def _boundary_for(text: str) -> UntrustedContentBoundary:
 def _risk_for(signals: list[str]) -> str:
     if not signals:
         return "none"
-    high_context = {"credential_access", "data_exfiltration", "tool_execution"}
-    if "instruction_override" in signals and any(signal in high_context for signal in signals):
+    present = set(signals)
+    # Signals describing an action against the agent (read/exfiltrate secrets,
+    # run tools) — meaningful only in the right context, not as bare keywords.
+    sensitive_action = {"credential_access", "data_exfiltration", "tool_execution"}
+    has_override = "instruction_override" in present
+    action_hits = present & sensitive_action
+    # Strong injection pattern: an explicit instruction-override paired with a
+    # sensitive action.
+    if has_override and action_hits:
         return "high"
-    if "credential_access" in signals and "data_exfiltration" in signals:
-        return "high"
-    if len(signals) >= 3:
-        return "high"
-    if any(signal in high_context for signal in signals) or len(signals) == 2:
+    # Suspicious but unanchored: an override alone, or two or more sensitive
+    # actions co-occurring without one.
+    if has_override or len(action_hits) >= 2:
         return "medium"
+    # A lone topical keyword (e.g. "secret"/"token"/"password" in ordinary
+    # technical/API docs) is not actionable on its own — keep it low so the
+    # higher labels stay meaningful for genuine injection attempts.
     return "low"
 
 

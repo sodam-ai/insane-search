@@ -158,8 +158,29 @@ def t_fetchresult_empty_content_remains_constructible() -> None:
     print("  ✓ FetchResult() constructors without content still work")
 
 
+def t_lone_topical_keyword_stays_low() -> None:
+    # A single sensitive noun ("secret"/"token"/"password") with no instruction
+    # override is common in legitimate docs and must not cry wolf at medium.
+    report = analyze_untrusted_content("This article explains the secret history of fermentation.")
+    assert report.prompt_injection_signals == ["credential_access"], report.prompt_injection_signals
+    assert report.prompt_injection_risk == "low", report.prompt_injection_risk
+    print("  ✓ a lone topical keyword stays low (no false 'medium')")
+
+
+def t_keyword_only_docs_cap_at_medium() -> None:
+    # Two keyword-driven signals with no instruction override (typical of auth
+    # docs) warn at most at medium, never high.
+    text = "POST your password and send the api key in the Authorization header."
+    report = analyze_untrusted_content(text)
+    assert "instruction_override" not in report.prompt_injection_signals
+    assert report.prompt_injection_risk == "medium", report
+    print("  ✓ keyword-only docs cap at medium, not high")
+
+
 ALL = [
     ("benign_content_reports_no_risk", t_benign_content_reports_no_risk),
+    ("lone_topical_keyword_stays_low", t_lone_topical_keyword_stays_low),
+    ("keyword_only_docs_cap_at_medium", t_keyword_only_docs_cap_at_medium),
     ("injection_like_content_reports_signals", t_injection_like_content_reports_signals),
     ("wrapper_preserves_original_text_inside_markers", t_wrapper_preserves_original_text_inside_markers),
     ("wrapper_uses_collision_resistant_boundary_id", t_wrapper_uses_collision_resistant_boundary_id),
